@@ -20,5 +20,7 @@ Please open an [Issue](https://github.com/USC-ACTLab/crazyswarm/issues) if you b
 - New feature proposals with details.
 
 ## Installation instructions
-The Crazyswarm package can be installed as described in the [documentation](https://crazyswarm.readthedocs.io/en/latest/installation.html). If you get an error when building for Python 3 compability, the build.sh file must be modified by adding the following option to the first catkin_make command: -DPYTHON_EXECUTABLE=/usr/bin/python3.
+The Crazyswarm package can be installed as described in the [documentation](https://crazyswarm.readthedocs.io/en/latest/installation.html). If you get an error when building for Python 3 compability, the build.sh file must be modified by adding the following option to the first catkin_make command: `-DPYTHON_EXECUTABLE=/usr/bin/python3`.
+
+If you are using Ubuntu 20.04 and are having problems installing `gcc-arm-embedded`, try this [solution](https://askubuntu.com/questions/1243252/how-to-install-arm-none-eabi-gdb-on-ubuntu-20-04-lts-focal-fossa). 
 
