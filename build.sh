@@ -43,6 +43,6 @@ cd $ROOT
 # ros
 cd ros_ws
 # -k: hack for dependency issues
-catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo -k
+catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo -k -DPYTHON_EXECUTABLE=/usr/bin/python3
 catkin_make
 cd $ROOT
