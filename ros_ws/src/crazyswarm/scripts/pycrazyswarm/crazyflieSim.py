@@ -4,6 +4,7 @@ import math
 
 import yaml
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from .cfsim import cffirmware as firm
 
@@ -335,6 +336,11 @@ class Crazyflie:
             roll = math.atan2(y_body[2], z_body[2])
             return (roll, pitch, yaw)
 
+    def rpyt2force(self, roll, pitch, yaw, thrust):
+        R = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=True).as_matrix()  # TODO: Verify degrees vs radians
+
+        return R@np.array([0, 0, thrust])
+
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.mode = Crazyflie.MODE_LOW_FULLSTATE
         self.setState.pos = firm.mkvec(*pos)
@@ -354,6 +360,15 @@ class Crazyflie:
         self.setState.vel = firm.mkvec(*vel)
         self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
+
+    def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.034, hover_throttle=34/64):
+        force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
+        force *= g/hover_throttle
+        acc = (force-firm.mkvec(0, 0, g))/m
+
+        vel = self.state.vel + dt*firm.mkvec(*acc)
+        print('force: ', force, 'acc: ', acc, 'vel: ', vel)
+        self.cmdVelocityWorld(vel, yaw_rate_d)
 
     def cmdStop(self):
         # TODO: set mode to MODE_IDLE?
