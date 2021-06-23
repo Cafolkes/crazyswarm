@@ -1,4 +1,4 @@
-# Exit immediately if a command exits with a non-zero status.
+	# Exit immediately if a command exits with a non-zero status.
 set -e
 
 ROOT=$PWD

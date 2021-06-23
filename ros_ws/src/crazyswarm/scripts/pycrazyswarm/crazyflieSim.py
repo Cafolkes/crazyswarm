@@ -367,7 +367,7 @@ class Crazyflie:
         acc = (force-firm.mkvec(0, 0, g))/m
 
         vel = self.state.vel + dt*firm.mkvec(*acc)
-        print('force: ', force, 'acc: ', acc, 'vel: ', vel)
+        #print('force: ', force, 'acc: ', acc, 'vel: ', vel)
         self.cmdVelocityWorld(vel, yaw_rate_d)
 
     def cmdStop(self):
