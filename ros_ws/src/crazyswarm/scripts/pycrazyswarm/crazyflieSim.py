@@ -48,7 +48,12 @@ class TimeHelper:
         for cf in self.crazyflies:
             cf.integrate(duration, self.disturbanceSize, self.maxVel)
         for cf in self.crazyflies:
+            roll_prev, pitch_prev, _ = np.array(cf.rpy())
             cf.flip()
+            cf.state.euler = np.array(cf.rpy())
+            omega = np.array([(roll_prev - cf.state.euler[0])/duration, (pitch_prev - cf.state.euler[1])/duration,
+                              cf.state.omega[2]])
+            cf.state.omega = firm.mkvec(*omega)
 
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
@@ -181,6 +186,7 @@ class Crazyflie:
         self.state.vel = firm.vzero()
         self.state.acc = firm.vzero()
         self.state.yaw = 0.0
+        self.state.euler = firm.vzero()
         self.state.omega = firm.vzero()
         self.ledRGB = (0.5, 0.5, 1)
 
@@ -318,6 +324,12 @@ class Crazyflie:
     def acceleration(self):
         return np.array(self.state.acc)
 
+    def euler(self):
+        return np.array(self.state.euler)
+
+    def omega(self):
+        return np.array(self.state.omega)
+
     def rpy(self):
         acc = self.acceleration()
         yaw = self.yaw()
@@ -363,11 +375,10 @@ class Crazyflie:
 
     def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.034, hover_throttle=34/64):
         force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
-        force *= g/hover_throttle
-        acc = (force-firm.mkvec(0, 0, g))/m
+        force *= m*g/hover_throttle
+        acc = (force-firm.mkvec(0, 0, m*g))/m
 
         vel = self.state.vel + dt*firm.mkvec(*acc)
-        #print('force: ', force, 'acc: ', acc, 'vel: ', vel)
         self.cmdVelocityWorld(vel, yaw_rate_d)
 
     def cmdStop(self):
@@ -413,6 +424,8 @@ class Crazyflie:
         self.backState = firm.traj_eval(setState)
         self.backState.pos = self.state.pos + time * velocity
         self.backState.vel = velocity
+
+        self.backState.acc = (velocity - self.state.vel)/time
 
         if self.mode == Crazyflie.MODE_LOW_POSITION:
             yawRate = (setState.yaw - self.state.yaw) / time
