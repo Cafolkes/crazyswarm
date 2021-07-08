@@ -659,7 +659,7 @@ public:
             {"stateEstimate", "z"},
             {"stateEstimateZ", "quat"}
           }, cb));
-        m_logBlockPose->start(10); // 100ms
+        m_logBlockPose->start(100); // 10ms
       }
     }
 
@@ -1013,7 +1013,7 @@ public:
         }
       }
       m_slowQueue.callAvailable(ros::WallDuration(0));
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
 
