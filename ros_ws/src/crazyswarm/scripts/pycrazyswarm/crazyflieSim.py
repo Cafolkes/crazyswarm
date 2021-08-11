@@ -163,6 +163,7 @@ class Crazyflie:
     MODE_LOW_FULLSTATE = 2
     MODE_LOW_POSITION = 3
     MODE_LOW_VELOCITY = 4
+    MODE_LOW_ACCELERATION = 5
 
 
     def __init__(self, id, initialPosition, timeHelper):
@@ -334,8 +335,6 @@ class Crazyflie:
         acc = self.acceleration()
         yaw = self.yaw()
         norm = np.linalg.norm(acc)
-        if norm > 5.0:
-            print("acc", acc)
         if norm < 1e-6:
             return (0.0, 0.0, yaw)
         else:
@@ -349,7 +348,7 @@ class Crazyflie:
             return (roll, pitch, yaw)
 
     def rpyt2force(self, roll, pitch, yaw, thrust):
-        R = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=True).as_matrix()  # TODO: Verify degrees vs radians
+        R = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=True).as_matrix()
 
         return R@np.array([0, 0, thrust])
 
@@ -373,13 +372,26 @@ class Crazyflie:
         self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
 
-    def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.034, hover_throttle=34/64):
+    #def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.035, hover_throttle=0.67):
+    #    force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
+    #    force *= m*g/hover_throttle
+    #    acc = (force-firm.mkvec(0, 0, m*g))/m
+
+    #    vel = self.state.vel + dt*firm.mkvec(*acc)
+    #    self.cmdVelocityWorld(vel, yaw_rate_d)
+
+    def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.035, hover_throttle=0.67):
+        self.mode = Crazyflie.MODE_LOW_ACCELERATION
         force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
         force *= m*g/hover_throttle
-        acc = (force-firm.mkvec(0, 0, m*g))/m
+        #acc = (force-firm.mkvec(0, 0, m*g))/m
+        acc = (force-np.array([0, 0, m*g]))/m
 
-        vel = self.state.vel + dt*firm.mkvec(*acc)
-        self.cmdVelocityWorld(vel, yaw_rate_d)
+        self.setState.acc = firm.mkvec(*acc)
+
+        #vel = self.state.vel + dt*firm.mkvec(*acc)
+        #self.cmdVelocityWorld(vel, yaw_rate_d)
+
 
     def cmdStop(self):
         # TODO: set mode to MODE_IDLE?
@@ -408,6 +420,8 @@ class Crazyflie:
             velocity = (setState.pos - self.state.pos) / time
         elif self.mode == Crazyflie.MODE_LOW_VELOCITY:
             velocity = setState.vel
+        elif self.mode == Crazyflie.MODE_LOW_ACCELERATION:
+            velocity = self.state.vel + time*self.setState.acc
         else:
             raise ValueError("Unknown flight mode.")
 
@@ -425,7 +439,10 @@ class Crazyflie:
         self.backState.pos = self.state.pos + time * velocity
         self.backState.vel = velocity
 
-        self.backState.acc = (velocity - self.state.vel)/time
+        if self.mode == Crazyflie.MODE_LOW_ACCELERATION:
+            self.backState.acc = self.setState.acc
+        else:
+            self.backState.acc = (velocity - self.state.vel)/time
 
         if self.mode == Crazyflie.MODE_LOW_POSITION:
             yawRate = (setState.yaw - self.state.yaw) / time
