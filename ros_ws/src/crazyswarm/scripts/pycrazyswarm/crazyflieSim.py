@@ -372,26 +372,14 @@ class Crazyflie:
         self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
 
-    #def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.035, hover_throttle=0.67):
-    #    force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
-    #    force *= m*g/hover_throttle
-    #    acc = (force-firm.mkvec(0, 0, m*g))/m
-
-    #    vel = self.state.vel + dt*firm.mkvec(*acc)
-    #    self.cmdVelocityWorld(vel, yaw_rate_d)
-
-    def cmdVel(self, roll_d, pitch_d, yaw_rate_d, thrust_d, yaw=0., dt=2e-2, g=9.81, m=0.035, hover_throttle=0.67):
+    def cmdVel(self, roll, pitch, yawRate, thrust, yaw=0., g=9.81, m=0.035, hover_throttle=0.67):
         self.mode = Crazyflie.MODE_LOW_ACCELERATION
-        force = self.rpyt2force(roll_d, pitch_d, yaw, thrust_d)
+        force = self.rpyt2force(roll, pitch, yaw, thrust)
         force *= m*g/hover_throttle
-        #acc = (force-firm.mkvec(0, 0, m*g))/m
         acc = (force-np.array([0, 0, m*g]))/m
 
         self.setState.acc = firm.mkvec(*acc)
-
-        #vel = self.state.vel + dt*firm.mkvec(*acc)
-        #self.cmdVelocityWorld(vel, yaw_rate_d)
-
+        self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
 
     def cmdStop(self):
         # TODO: set mode to MODE_IDLE?
