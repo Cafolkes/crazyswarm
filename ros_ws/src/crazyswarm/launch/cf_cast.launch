@@ -11,7 +11,7 @@
       # Logging configuration (Use enable_logging to actually enable logging)
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
-      genericLogTopic_log1_Variables: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "stateEstimateZ.quat", "stateEstimateZ.vx", "stateEstimateZ.vy", "stateEstimateZ.vz", "stateEstimateZ.rateRoll", "stateEstimateZ.ratePitch", "stateEstimateZ.rateYaw"]
+      genericLogTopic_log1_Variables: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "stateEstimateZ.quat", "stateEstimateZ.vx", "stateEstimateZ.vy", "stateEstimateZ.vz", "stateEstimateZ.rateRoll", "stateEstimateZ.ratePitch"]
       #genericLogTopic_log2_Variables: ["stateEstimate.qx", "stateEstimate.qy", "stateEstimate.qz", "stateEstimate.qw", "stateEstimateZ.rateRoll", "stateEstimateZ.ratePitch", "stateEstimateZ.rateYaw"]
       # firmware parameters for all drones (use crazyflieTypes.yaml to set per type, or
       # allCrazyflies.yaml to set per drone)
@@ -60,6 +60,11 @@
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
+  
+  <node pkg="state_transformer" type="state_transformer" name="state_transformer">
+  </node>
+
+  <!-- <node name="state_transformer_node" pkg="state_transformer" type="state_transformer"> -->
 
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf2/log1/values[0]"/> -->
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/> -->
