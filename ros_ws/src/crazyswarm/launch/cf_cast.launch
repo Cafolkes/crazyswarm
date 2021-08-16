@@ -60,6 +60,9 @@
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
+  
+  <node pkg="state_transformer" type="state_transformer" name="state_transformer">
+  </node>
 
   <!-- <node name="state_transformer_node" pkg="state_transformer" type="state_transformer"> -->
 
