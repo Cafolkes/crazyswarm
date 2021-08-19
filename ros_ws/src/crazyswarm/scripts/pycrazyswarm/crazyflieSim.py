@@ -347,10 +347,17 @@ class Crazyflie:
             roll = math.atan2(y_body[2], z_body[2])
             return (roll, pitch, yaw)
 
-    def rpyt2force(self, roll, pitch, yaw, thrust):
+    def _rpyt2force(self, roll, pitch, yaw, thrust):
+        thrust /= 2**16
+        total_thrust = self._normalized_pwm2normalized_thrust(thrust)*4  # TODO: Check if result must be multiplied by 4 (4 rotors)
         R = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=True).as_matrix()
 
-        return R@np.array([0, 0, thrust])
+        return R@np.array([0, 0, total_thrust])
+
+    def _normalized_pwm2normalized_thrust(self, normalized_pwm, normalized_voltage=0.8, a=-0.18386916161000877,
+                                          b=0.5437057173391476,  c=0.22434278175383388, d=-0.037018218629046196,
+                                          e=-0.35376046246978554):
+        return a + b*normalized_pwm + c*normalized_voltage + d*normalized_pwm**2 + e*normalized_pwm*normalized_voltage
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.mode = Crazyflie.MODE_LOW_FULLSTATE
@@ -372,14 +379,15 @@ class Crazyflie:
         self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
 
-    def cmdVel(self, roll, pitch, yawRate, thrust, yaw=0., g=9.81, m=0.035, hover_throttle=0.67):
+    def cmdVel(self, roll, pitch, yawRate, thrust, yaw=0., g=9.81, m=0.035, max_thrust_kg=0.057):
         self.mode = Crazyflie.MODE_LOW_ACCELERATION
-        force = self.rpyt2force(roll, pitch, yaw, thrust)
-        force *= m*g/hover_throttle
-        acc = (force-np.array([0, 0, m*g]))/m
+        total_normalized_force = self._rpyt2force(roll, pitch, yaw, thrust)
+        total_force = total_normalized_force*max_thrust_kg*g
+        acc = (total_force-np.array([0, 0, m*g]))/m
 
         self.setState.acc = firm.mkvec(*acc)
-        self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
+        yawRate_rad = math.radians(yawRate)
+        self.setState.omega = firm.mkvec(0.0, 0.0, yawRate_rad)
 
     def cmdStop(self):
         # TODO: set mode to MODE_IDLE?
