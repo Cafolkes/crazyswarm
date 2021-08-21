@@ -379,7 +379,7 @@ class Crazyflie:
         self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
 
-    def cmdVel(self, roll, pitch, yawRate, thrust, yaw=0., g=9.81, m=0.035, max_thrust_kg=0.057):
+    def cmdVel(self, roll, pitch, yawRate, thrust, yaw=0., g=9.81, m=0.0348, max_thrust_kg=0.057):
         self.mode = Crazyflie.MODE_LOW_ACCELERATION
         total_normalized_force = self._rpyt2force(roll, pitch, yaw, thrust)
         total_force = total_normalized_force*max_thrust_kg*g
