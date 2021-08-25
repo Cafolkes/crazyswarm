@@ -45,9 +45,10 @@ class TimeHelper:
 
     def step(self, duration):
         self.t += duration
+        #for cf in self.crazyflies:
+
         for cf in self.crazyflies:
             cf.integrate(duration, self.disturbanceSize, self.maxVel)
-        for cf in self.crazyflies:
             roll_prev, pitch_prev, _ = np.array(cf.rpy())
             cf.flip()
             cf.state.euler = np.array(cf.rpy())
@@ -412,12 +413,22 @@ class Crazyflie:
         if self.mode == Crazyflie.MODE_IDLE:
             return
 
-        if self.mode in (Crazyflie.MODE_HIGH_POLY, Crazyflie.MODE_LOW_FULLSTATE, Crazyflie.MODE_LOW_POSITION):
+        if self.mode in (Crazyflie.MODE_HIGH_POLY, Crazyflie.MODE_LOW_POSITION):
             velocity = (setState.pos - self.state.pos) / time
-        elif self.mode == Crazyflie.MODE_LOW_VELOCITY:
+        elif self.mode in (Crazyflie.MODE_LOW_VELOCITY, Crazyflie.MODE_LOW_FULLSTATE):
             velocity = setState.vel
         elif self.mode == Crazyflie.MODE_LOW_ACCELERATION:
             velocity = self.state.vel + time*self.setState.acc
+        #elif self.mode == Crazyflie.MODE_LOW_FULLSTATE:
+        #    velocity_tmp = np.array(self.state.vel + time*self.setState.acc)
+
+            # Clip velocity when desired velocity reached:
+            #for ii, (acc_d, vel_d, vel) in enumerate(zip(self.setState.acc, self.setState.vel, velocity_tmp)):
+            #    if acc_d > 0:
+            #        velocity_tmp[ii] = min(vel, vel_d)
+            #    else:
+            #        velocity_tmp[ii] = max(vel, vel_d)
+            #velocity = firm.mkvec(velocity_tmp[0], velocity_tmp[1], velocity_tmp[2])
         else:
             raise ValueError("Unknown flight mode.")
 
